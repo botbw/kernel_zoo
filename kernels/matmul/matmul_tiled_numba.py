@@ -39,7 +39,7 @@ def matmul_2d_numba(m, n, tw=16):
     h, k = m.shape
     k2, w = n.shape
     assert k == k2, "Size mismatch!"
-    out = torch.zeros(h, w, dtype=m.dtype, device=m.device)
+    out = torch.empty(h, w, dtype=m.dtype, device=m.device)
     dyn_shared_mem_size = 2 * tw * tw * 4
     tpb = tw, tw
     blocks = cdiv(w, tpb[0]), cdiv(h, tpb[1])
