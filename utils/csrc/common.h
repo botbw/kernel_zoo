@@ -29,8 +29,20 @@ inline void gpuAssert(cudaError_t code, const char *file, int line,
   }
 }
 
-inline unsigned int cdiv(unsigned int a, unsigned int b) {
+unsigned int cdiv(unsigned int a, unsigned int b) {
   return (a + b - 1) / b;
+}
+
+__device__ unsigned int cdiv_d(unsigned int a, unsigned int b) {
+  return (a + b - 1) / b;
+}
+
+size_t getSharedMemorySize() {
+  int deviceId;
+  cudaGetDevice(&deviceId);
+  cudaDeviceProp deviceProp;
+  cudaGetDeviceProperties(&deviceProp, deviceId);
+  return deviceProp.sharedMemPerBlock;
 }
 
 #endif  // COMMON_H
