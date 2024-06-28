@@ -1,6 +1,6 @@
 import torch
 
-PROFILE_STEPS = 1000
+PROFILE_STEPS = 10
 # WARM_UP_STEPS = 1000
 
 def profile(func, *args, **kwargs):

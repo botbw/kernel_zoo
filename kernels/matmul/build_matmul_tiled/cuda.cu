@@ -1,7 +1,7 @@
 #include <torch/types.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include "common.h"
+#include "common.cuh"
 
 constexpr int TILE_SIZE = 32;
 
@@ -20,10 +20,10 @@ __global__ void matmul_tiled_out(const float *m1, const float *m2, float *out,
     // _m1[tile_i][tile_j] = m1[i][k_step * TILE_SIZE + tile_j]
     // _m2[tile_i][tile_j] = m2[k_step * TILE_SIZE + tile_i][j]
     _m1[tile_i][tile_j] = (i < m1_r && k_step * TILE_SIZE + tile_j < m1_c)
-                              ? m1[i * m1_r + k_step * TILE_SIZE + tile_j]
+                              ? m1[i * m1_c + k_step * TILE_SIZE + tile_j]
                               : 0;
     _m2[tile_i][tile_j] = ((k_step * TILE_SIZE + tile_i) < m1_c && j < m2_c)
-                              ? m2[(k_step * TILE_SIZE + tile_i) * m1_c + j]
+                              ? m2[(k_step * TILE_SIZE + tile_i) * m2_c + j]
                               : 0;
     __syncthreads();
     for (int tile_k = 0; tile_k < TILE_SIZE; tile_k++) {
@@ -33,7 +33,7 @@ __global__ void matmul_tiled_out(const float *m1, const float *m2, float *out,
   }
 
   if (i < m1_r && j < m2_c) {
-    out[i * m1_r + j] = sum;
+    out[i * m2_c + j] = sum;
   }
 }
 

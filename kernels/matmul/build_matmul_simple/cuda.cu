@@ -1,21 +1,22 @@
 #include <torch/types.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include "common.h"
+#include "common.cuh"
 
 constexpr int THREAD_DIM = 16;
 
-__global__ void matmul_simple_out(const float *m1, const float *m2, float *out,
+template<typename T>
+__global__ void matmul_simple_out(const T *m1, const T *m2, T *out,
                                   int m1_r, int m1_c, int m2_c) {
   int i = blockDim.x * blockIdx.x + threadIdx.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y;
 
   if (i < m1_r && j < m2_c) {
-    float sum = 0;
+    T sum = 0;
     for (int k = 0; k < m1_c; k++) {
       sum += m1[i * m1_c + k] * m2[k * m2_c + j];
     }
-    out[i * m1_r + j] = sum;
+    out[i * m2_c + j] = sum;
   }
 }
 
@@ -29,7 +30,7 @@ torch::Tensor matmul_simple(const torch::Tensor &m1, const torch::Tensor &m2) {
   auto out = torch::empty({m1_r, m2_c}, m1.options());
   dim3 tShape(THREAD_DIM, THREAD_DIM);
   dim3 bShape(cdiv(m1_r, tShape.x), cdiv(m2_c, tShape.y));
-  matmul_simple_out<<<bShape, tShape>>>(
+  matmul_simple_out<float><<<bShape, tShape>>>(
       m1.data_ptr<float>(), m2.data_ptr<float>(), out.data_ptr<float>(), m1_r,
       m1_c, m2_c);
 
