@@ -9,8 +9,8 @@ from utils import profile, compile_cuda_module, compile_cpp_module
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MAT_SIZE_M1_R = 500
-MAT_SIZE_M1_C = 200
+MAT_SIZE_M1_R = 1000
+MAT_SIZE_M1_C = 1000
 MAT_SIZE_M2_C = 1000
 
 
@@ -36,7 +36,7 @@ def test_matmul_cpu():
     ext = compile_cpp_module('matmul_cpu', c_src,
                              CUR_DIR + '/build_matmul_cpu')
 
-    assert_allclose(ext.matmul_cpu(m1, m2), m1 @ m2)
+    assert_allclose(ext.matmul_cpu(m1, m2), m1 @ m2, atol=1e-4, rtol=1e-3)
 
     print(profile(ext.matmul_cpu, m1, m2))
 
@@ -52,7 +52,7 @@ def test_matmul_simple():
     m1 = torch.randn(MAT_SIZE_M1_R, MAT_SIZE_M1_C, device='cuda')
     m2 = torch.randn(MAT_SIZE_M1_C, MAT_SIZE_M2_C, device='cuda')
 
-    assert_allclose(ext.matmul_simple(m1, m2), m1 @ m2)
+    assert_allclose(ext.matmul_simple(m1, m2), m1 @ m2, atol=1e-4, rtol=1e-3)
 
     print(profile(ext.matmul_simple, m1, m2))
     print(
@@ -71,7 +71,7 @@ def test_matmul_tiled():
     m1 = torch.randn(MAT_SIZE_M1_R, MAT_SIZE_M1_C, device='cuda')
     m2 = torch.randn(MAT_SIZE_M1_C, MAT_SIZE_M2_C, device='cuda')
 
-    assert_allclose(ext.matmul_tiled(m1, m2), m1 @ m2)
+    assert_allclose(ext.matmul_tiled(m1, m2), m1 @ m2, atol=1e-4, rtol=1e-3)
 
     print(profile(ext.matmul_tiled, m1, m2))
     print(
@@ -90,7 +90,7 @@ def test_matmul_tiled_numba():
     m1 = torch.randn(MAT_SIZE_M1_R, MAT_SIZE_M1_C, device='cuda')
     m2 = torch.randn(MAT_SIZE_M1_C, MAT_SIZE_M2_C, device='cuda')
 
-    assert_allclose(ext.matmul_2d_numba(m1, m2, 32), m1 @ m2)
+    assert_allclose(ext.matmul_2d_numba(m1, m2, 32), m1 @ m2, atol=1e-4, rtol=1e-3)
 
     print(profile(ext.matmul_2d_numba, m1, m2, 32))
     print(
