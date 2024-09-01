@@ -5,9 +5,10 @@
 
 constexpr int TILE_SIZE = 32;
 
-__global__ void matmul_tiled_out(const float *m1, const float *m2, float *out,
+template <typename T>
+__global__ void matmul_tiled_out(const T *m1, const T *m2, T *out,
                                  int m1_r, int m1_c, int m2_c) {
-  __shared__ float _m1[TILE_SIZE][TILE_SIZE], _m2[TILE_SIZE][TILE_SIZE];
+  __shared__ T _m1[TILE_SIZE][TILE_SIZE], _m2[TILE_SIZE][TILE_SIZE];
 
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = blockIdx.y * blockDim.y + threadIdx.y;
@@ -15,7 +16,7 @@ __global__ void matmul_tiled_out(const float *m1, const float *m2, float *out,
   int tile_i = threadIdx.x;
   int tile_j = threadIdx.y;
 
-  float sum = 0;
+  T sum = 0;
   for (int k_step = 0; k_step < cdiv_d(m1_c, TILE_SIZE); k_step++) {
     // _m1[tile_i][tile_j] = m1[i][k_step * TILE_SIZE + tile_j]
     // _m2[tile_i][tile_j] = m2[k_step * TILE_SIZE + tile_i][j]
@@ -48,7 +49,7 @@ torch::Tensor matmul_tiled(const torch::Tensor &m1, const torch::Tensor &m2) {
 
   dim3 tShape(TILE_SIZE, TILE_SIZE);
   dim3 bShape(cdiv(m1_r, tShape.x), cdiv(m2_c, tShape.y));
-  matmul_tiled_out<<<bShape, tShape>>>(m1.data_ptr<float>(),
+  matmul_tiled_out<float><<<bShape, tShape>>>(m1.data_ptr<float>(),
                                        m2.data_ptr<float>(),
                                        out.data_ptr<float>(), m1_r, m1_c, m2_c);
 

@@ -5,7 +5,7 @@ from torch.utils.cpp_extension import load_inline
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
-with open(f"{CUR_DIR}/csrc/common.cuh", 'r') as f:
+with open(f"{CUR_DIR}/include/common.cuh", 'r') as f:
     COMMON_HEADER = f.read()
 
 
@@ -32,7 +32,7 @@ def compile_cuda_module(func_name,
         extra_cuda_cflags=extra_cuda_cflags,
         verbose=True,
         build_directory=build_dir,
-        extra_include_paths=[f"{CUR_DIR}/csrc"],
+        extra_include_paths=[f"{CUR_DIR}/include"],
     )
 
     return ext
@@ -48,7 +48,7 @@ def compile_cpp_module(func_name, cpp_src, build_dir, extra_cuda_cflags=None):
         functions=[func_name],
         verbose=True,
         build_directory=build_dir,
-        extra_include_paths=[f"{CUR_DIR}/csrc"],
+        extra_include_paths=[f"{CUR_DIR}/include"],
     )
 
     return ext
