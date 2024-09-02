@@ -93,8 +93,8 @@ torch::Tensor flash_attn(torch::Tensor q, torch::Tensor k, torch::Tensor v)
     const int head_dim = q.size(3);
     const float rooted_head_dim = sqrt(head_dim);
 
-    const int Br = 32;
-    const int Bc = Br < head_dim ? Br : head_dim;
+    const int Br = 64;
+    const int Bc = Br;
     const int Tr = cdiv(seql, Br), Tc = cdiv(seql, Bc);
 
     torch::Tensor attn_o = torch::zeros_like(q);
@@ -114,6 +114,8 @@ torch::Tensor flash_attn(torch::Tensor q, torch::Tensor k, torch::Tensor v)
         l.data_ptr<float>(), m.data_ptr<float>(),
         attn_o.data_ptr<float>(),
         seql, head_dim, rooted_head_dim, Br, Bc, Tr, Tc);
+
+    C10_CUDA_KERNEL_LAUNCH_CHECK();
 
     return attn_o;
 }

@@ -5,10 +5,10 @@ from utils import profile, compile_cuda_module
 from torch.testing import assert_allclose
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
-BSZ = 16
+BSZ = 64
 NUM_HEADS=8
-HEAD_DIM=64
-SEQ_LEN=512
+HEAD_DIM=1
+SEQ_LEN=1024
 
 def torch_attn(q, k, v):
     assert len(q.shape) == 4
