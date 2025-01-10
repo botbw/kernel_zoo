@@ -9,9 +9,9 @@ from utils import profile, compile_cuda_module, compile_cpp_module
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 
-MAT_SIZE_M1_R = 1000
-MAT_SIZE_M1_C = 1000
-MAT_SIZE_M2_C = 1000
+MAT_SIZE_M1_R = 1024
+MAT_SIZE_M1_C = 1024
+MAT_SIZE_M2_C = 1024
 
 
 def test_torch_native():
@@ -79,6 +79,25 @@ def test_matmul_tiled():
     )
 
 
+def test_matmul_fraged():
+    torch.cuda.reset_max_memory_allocated()
+    with open(f"{CUR_DIR}/matmul_fraged.cu", 'r') as f:
+        cuda_source = f.read()
+
+    ext = compile_cuda_module('matmul_fraged', cuda_source,
+                              CUR_DIR + '/build_matmul_fraged')
+
+    m1 = torch.ones(MAT_SIZE_M1_R, MAT_SIZE_M1_C, device='cuda')
+    m2 = torch.ones(MAT_SIZE_M1_C, MAT_SIZE_M2_C, device='cuda')
+
+    assert_allclose(ext.matmul_fraged(m1, m2), m1 @ m2, atol=1e-4, rtol=1e-3)
+
+    print(profile(ext.matmul_fraged, m1, m2))
+    print(
+        f"Max memory allocated: {torch.cuda.max_memory_allocated()/1024 ** 2} MB"
+    )
+
+
 def test_matmul_tiled_numba():
     torch.cuda.reset_max_memory_allocated()
     spec = importlib.util.spec_from_file_location(
@@ -100,7 +119,6 @@ def test_matmul_tiled_numba():
 
 if __name__ == '__main__':
     test_torch_native()
-    test_matmul_cpu()
     test_matmul_simple()
     test_matmul_tiled()
-    test_matmul_tiled_numba()
+    test_matmul_fraged()

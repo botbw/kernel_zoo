@@ -27,6 +27,7 @@ __global__ void matmul_tiled_out(const T *m1, const T *m2, T *out,
                               ? m2[(k_step * TILE_SIZE + tile_i) * m2_c + j]
                               : 0;
     __syncthreads();
+    #pragma unroll
     for (int tile_k = 0; tile_k < TILE_SIZE; tile_k++) {
       sum += _m1[tile_i][tile_k] * _m2[tile_k][tile_j];
     }
