@@ -1,6 +1,6 @@
 import torch
 from time import time
-PROFILE_STEPS = 10
+PROFILE_STEPS = 1
 WARM_UP_STEPS = 5
 
 def profile(func, *args, run=PROFILE_STEPS, warm_up=WARM_UP_STEPS, **kwargs):

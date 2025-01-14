@@ -17,3 +17,5 @@ __pycache__
 lock
 
 *.ninja
+
+*.egg-info

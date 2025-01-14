@@ -1,6 +1,6 @@
 #include "common.cuh"
 
-constexpr int TILE_SZ = 32, FRAG_SIZE = 8;
+constexpr int TILE_SZ = 64, FRAG_SIZE = 8;
 
 template <typename T, int _TILE_SZ, int _FRAG_SIZE>
 __global__ void matmul_fraged_out(
