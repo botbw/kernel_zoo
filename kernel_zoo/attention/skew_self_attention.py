@@ -18,7 +18,6 @@ def create_skew_self_attention_func(
     xx, yy, zz = torch.meshgrid(x, y, z)
     indices = torch.stack((xx.flatten(), yy.flatten(), zz.flatten()), dim=1)
 
-
     def skew_self_attention_mask(
         b: IntTensor,
         h: IntTensor,
@@ -28,7 +27,7 @@ def create_skew_self_attention_func(
         q_coord = indices[q_idxes]
         kv_coord = indices[kv_idxes]
         return (((q_coord - kv_coord).abs() - window_size) <= 0).all()
-    
+
     return skew_self_attention_mask
 
 ############################## visualization utils #####################################
@@ -214,10 +213,10 @@ if __name__ == "__main__":
     SEQ_STRIDE = (H, W, 1)
     SEQ_LEN = T * W * H
     WINDOW_SHAPE = torch.tensor([1, 1, 1], device=device, dtype=torch.int)
-    B, H, HEAD_DIM = 1, 1, 4
+    B, HID, HEAD_DIM = 1, 1, 4
 
     def make_tensor():
-        return torch.ones(B, H, SEQ_LEN, HEAD_DIM, device=device)
+        return torch.ones(B, HID, SEQ_LEN, HEAD_DIM, device=device)
 
     query, key = make_tensor(), make_tensor()
 
@@ -226,7 +225,8 @@ if __name__ == "__main__":
         key,
         mask_mod=create_skew_self_attention_func(
             (SEQ_SHAPE, SEQ_STRIDE),
-            WINDOW_SHAPE
+            WINDOW_SHAPE,
+            device=device
         ),
         device=device,
         name="skew_self_attention"
