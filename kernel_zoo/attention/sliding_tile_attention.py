@@ -183,23 +183,12 @@ from torch.nn.attention.flex_attention import create_block_mask
 torch._inductor.config.realize_opcount_threshold = 100
 
 
-def generate_sta_mask(canvas_twh, kernel_twh, tile_twh, text_length):
-    """Generates a 3D NATTEN attention mask with a given kernel size.
-    
-    Args:
-        canvas_t: The time dimension of the canvas.
-        canvas_h: The height of the canvas.
-        canvas_w: The width of the canvas.
-        kernel_t: The time dimension of the kernel.
-        kernel_h: The height of the kernel.
-        kernel_w: The width of the kernel.
-    """
+def generate_sta_mask(canvas_twh, kernel_twh, tile_twh):
     canvas_t, canvas_h, canvas_w = canvas_twh
     kernel_t, kernel_h, kernel_w = kernel_twh
     tile_t_size, tile_h_size, tile_w_size = tile_twh
     total_tile_size = tile_t_size * tile_h_size * tile_w_size
     canvas_tile_t, canvas_tile_h, canvas_tile_w = canvas_t // tile_t_size, canvas_h // tile_h_size, canvas_w // tile_w_size
-    img_seq_len = canvas_t * canvas_h * canvas_w
 
     def get_tile_t_x_y(idx: IntTensor) -> Tuple[IntTensor, IntTensor, IntTensor]:
         tile_id = idx // total_tile_size
@@ -216,11 +205,9 @@ def generate_sta_mask(canvas_twh, kernel_twh, tile_twh, text_length):
     ) -> BoolTensor:
         q_t_tile, q_x_tile, q_y_tile = get_tile_t_x_y(q_idx)
         kv_t_tile, kv_x_tile, kv_y_tile = get_tile_t_x_y(kv_idx)
-        print(q_idx, q_t_tile, q_x_tile, q_y_tile)
         kernel_center_t = q_t_tile.clamp(kernel_t // 2, (canvas_tile_t - 1) - kernel_t // 2)
         kernel_center_x = q_x_tile.clamp(kernel_h // 2, (canvas_tile_h - 1) - kernel_h // 2)
         kernel_center_y = q_y_tile.clamp(kernel_w // 2, (canvas_tile_w - 1) - kernel_w // 2)
-        print(kernel_center_t, kernel_center_x, kernel_center_y)
         time_mask = (kernel_center_t - kv_t_tile).abs() <= kernel_t // 2
         hori_mask = (kernel_center_x - kv_x_tile).abs() <= kernel_h // 2
         vert_mask = (kernel_center_y - kv_y_tile).abs() <= kernel_w // 2
@@ -230,9 +217,9 @@ def generate_sta_mask(canvas_twh, kernel_twh, tile_twh, text_length):
     return sta_mask_3d
 
 
-def get_sliding_tile_attention_mask(kernel_size, tile_size, img_size, text_length, device, text_max_len=256):
+def get_sliding_tile_attention_mask(kernel_size, tile_size, img_size):
     img_seq_len = img_size[0] * img_size[1] * img_size[2]
-    image_mask = generate_sta_mask(img_size, kernel_size, tile_size, text_length)
+    image_mask = generate_sta_mask(img_size, kernel_size, tile_size)
     return image_mask
 
 if __name__ == "__main__":
@@ -250,7 +237,7 @@ if __name__ == "__main__":
     visualize_attention_scores(
         query,
         key,
-        mask_mod=get_sliding_tile_attention_mask((1, 3, 3), (1, 2, 2), (T, H, W), 0, device, 0),
+        mask_mod=get_sliding_tile_attention_mask((3, 3, 3), (1, 2, 2), (T, H, W)),
         device=device,
         name="sliding_tile_attention"
     )
